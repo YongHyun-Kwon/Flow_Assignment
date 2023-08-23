@@ -1,0 +1,9 @@
+server:
+  port: 4000
+
+spring:
+  profiles:
+    include: private
+
+logging.level:
+  org.hibernate.SQL: debug
