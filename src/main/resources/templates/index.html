@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Custom Extensions</title>
+    <!-- Import Material Design CSS -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11.0.18/dist/sweetalert2.min.css">
+    <style>
+        body {
+            background-color: #f7f7f7;
+            margin: 0;
+            font-family: Arial, sans-serif;
+        }
+        .header {
+            background-color: #009688;
+            color: #fff;
+            padding: 20px;
+            text-align: center;
+        }
+        .container {
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            margin-top: 30px;
+        }
+        .chips {
+            margin-top: 10px;
+        }
+        .add-button {
+            width: 30px;
+            height: 30px;
+            background-color: #009688;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+        }
+        .footer {
+            text-align: center;
+            margin-top: 30px;
+            padding: 10px;
+            background-color: #009688;
+            color: #fff;
+        }
+        .extension-list {
+            display: flex;
+            flex-direction: row;
+            flex-wrap: wrap;
+        }
+        .extension {
+            flex: 0 0 auto;
+            margin-right: 2rem; /* Add spacing between extensions */
+        }
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <h1>Custom Extensions</h1>
+</div>
+
+<div class="container">
+
+    <h2>Extensions</h2>
+    <div class="extension-list" >
+        <div class="extension" th:each="extension : ${extensions}" th:if="${#strings.equals(extension.type, 'DEFAULT')}">
+            <label>
+                <input type="checkbox" class="filled-in"
+                       th:checked="${extension.isChecked}"
+                       th:attr="data-extension-id=${extension.id}"/>
+                <span th:text="${extension.name}"></span>
+            </label>
+        </div>
+    </div>
+
+    <h2>Add Custom Extension</h2>
+    <div class="row">
+        <div class="input-field col s6">
+            <input id="customExtension" type="text" class="validate">
+            <label for="customExtension">Custom Extension</label>
+        </div>
+        <div class="col s6">
+            <a id="addExtensionButton" class="btn-floating btn-large waves-effect waves-light grey">
+                <i class="material-icons">add</i>
+            </a>
+        </div>
+    </div>
+
+    <h2>Custom Extensions</h2>
+    <div class="chips" id="chipsContainer">
+        <div class="chip" th:each="extension : ${extensions}" th:if="${#strings.equals(extension.type, 'CUSTOM')}">
+            <span th:text="${extension.name}"></span>
+            <i class="close material-icons" th:attr="data-extension-id=${extension.id}">close</i>
+        </div>
+    </div>
+
+</div>
+
+<div class="footer">
+    <p>© 2023 Custom Extensions. All rights reserved.</p>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.0.18/dist/sweetalert2.min.js"></script>
+<script>
+    const checkboxes = document.querySelectorAll('.extension input[type="checkbox"]');
+    checkboxes.forEach(checkbox => {
+        checkbox.addEventListener('change', () => {
+            const isChecked = checkbox.checked;
+            const extensionId = checkbox.getAttribute('data-extension-id');
+            updateExtensionStatus(extensionId, isChecked);
+        });
+    });
+
+    async function updateExtensionStatus(id, isChecked) {
+        const response = await fetch(`/extension/v1/extensions/check/${id}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(isChecked)
+        });
+
+        if (response.ok) {
+            console.log('Extension status updated successfully.');
+        } else {
+            console.error('Failed to update extension status.');
+        }
+    }
+
+
+    // 저장 / 삭제
+
+    const addExtensionButton = document.getElementById('addExtensionButton');
+    const customExtensionInput = document.getElementById('customExtension');
+    const chipsContainer = document.getElementById('chipsContainer');
+
+    addExtensionButton.addEventListener('click', async () => {
+        const customExtension = customExtensionInput.value.trim();
+
+        if (customExtension !== '') {
+            const savedExtension = await saveCustomExtension(customExtension);
+            if (savedExtension) {
+                const chipElement = createChipElement(customExtension, savedExtension);
+                chipsContainer.appendChild(chipElement);
+                customExtensionInput.value = '';
+
+                const closeButton = document.createElement('i');
+                closeButton.classList.add('close', 'material-icons');
+                closeButton.textContent = 'close';
+                closeButton.addEventListener('click', async () => {
+                    const deleteResponse = await deleteExtension(savedExtension);
+                    if (deleteResponse) {
+                        chipsContainer.removeChild(chipElement);
+                    }
+                });
+                chipElement.appendChild(closeButton);
+            }
+        }
+    });
+
+    async function saveCustomExtension(extensionName) {
+        var regex = /^[a-zA-Z0-9]+$/;
+        if (extensionName.length <= 20) {
+            if (regex.test(extensionName)) {
+                const response = await fetch('/extension/v1/extensions', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        name: extensionName
+                    })
+                });
+                if (response.ok) {
+                    const savedExtension = await response.json();
+                    return savedExtension;
+                } else {
+                    console.log(response)
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Failed to save',
+                        text: 'Failed to save',
+                    });
+                    return null;
+                }
+            } else {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Failed to save',
+                    text: '특수문자는 저장 불가능합니다.',
+                });
+                return;
+            }
+        } else {
+            Swal.fire({
+                icon: 'error',
+                title: 'Failed to save',
+                text: '확장자는 20자 이내만 저장 가능합니다.',
+            });
+            return;
+        }
+    }
+
+    function createChipElement(customExtension, savedExtension) {
+        const chipElement = document.createElement('div');
+        chipElement.className = 'chip';
+        chipElement.textContent = customExtension;
+        chipElement.dataset.extensionId = savedExtension;
+        return chipElement;
+    }
+
+    async function deleteExtension(extensionId) {
+    const response = await fetch(`/extension/v1/extensions/${extensionId}`, {
+        method: 'DELETE',
+    });
+
+    if (response.ok) {
+        console.log(`Extension ${extensionId} deleted successfully.`);
+        return true;
+    } else {
+        console.error(`Failed to delete extension ${extensionId}.`);
+        return false;
+    }
+}
+
+</script>
+</body>
+
+</html>
