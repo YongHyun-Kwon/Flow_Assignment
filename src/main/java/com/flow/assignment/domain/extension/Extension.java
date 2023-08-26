@@ -1,40 +1,47 @@
 package com.flow.assignment.domain.extension;
 
-import com.flow.assignment.domain.BaseTime;
 import com.flow.assignment.web.dto.ExtensionRequestDto;
-import lombok.AccessLevel;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import org.hibernate.annotations.ColumnDefault;
+import org.hibernate.validator.constraints.Length;
 
 import javax.persistence.*;
-import javax.validation.constraints.NotNull;
 
-@Entity
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class Extension extends BaseTime {
+@Entity
+@Table(name = "extension")
+public class Extension {
 
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "extension_id")
     private Long id;
-
     @Column(name = "extension_name", unique = true)
-    @NotNull
+    @Length(max = 20)
     private String name;
-
+    @Enumerated(EnumType.STRING)
+    private ExtensionType type;
     @ColumnDefault("false")
     @Column(columnDefinition = "TINYINT(1)")
     private boolean isChecked;
 
     @Builder
-    public Extension(String name, boolean isChecked) {
+    public Extension(String name, ExtensionType type, boolean isChecked) {
         this.name = name;
+        this.type = type;
         this.isChecked = isChecked;
     }
 
-    public void checkedExtension(ExtensionRequestDto extensionDto) {
-        this.isChecked = extensionDto.isChecked();
+    public static Extension createExtension(ExtensionRequestDto requestDto) {
+        return Extension.builder()
+                .name(requestDto.getName())
+                .type(ExtensionType.CUSTOM)
+                .build();
     }
+
+    public void checkedExtension(boolean isChecked) {
+        this.isChecked = isChecked;
+    }
+
 }
+
