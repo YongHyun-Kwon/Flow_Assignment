@@ -1,0 +1,49 @@
+body {
+    background-color: #f7f7f7;
+    margin: 0;
+    font-family: Arial, sans-serif;
+}
+.header {
+    background-color: #009688;
+    color: #fff;
+    padding: 20px;
+    text-align: center;
+}
+.container {
+    padding: 20px;
+    background-color: #fff;
+    border-radius: 10px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    margin-top: 30px;
+}
+.chips {
+    margin-top: 10px;
+}
+.add-button {
+    width: 30px;
+    height: 30px;
+    background-color: #009688;
+    color: #fff;
+    border: none;
+    border-radius: 5px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+}
+.footer {
+    text-align: center;
+    margin-top: 30px;
+    padding: 10px;
+    background-color: #009688;
+    color: #fff;
+}
+.extension-list {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+}
+.extension {
+    flex: 0 0 auto;
+    margin-right: 2rem; /* Add spacing between extensions */
+}
