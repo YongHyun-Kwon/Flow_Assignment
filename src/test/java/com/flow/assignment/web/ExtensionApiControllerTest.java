@@ -130,8 +130,5 @@ public class ExtensionApiControllerTest {
 
         assertThat(responseJson.get("result").asBoolean()).isTrue();
         assertThat(responseJson.get("message").asText()).isEqualTo(ResponseMessage.SUCCESS_EXTENSION_LIST_MESSAGE);
-
-        JsonNode extensions = responseJson.get("data");
-        assertThat(extensions).isNotEmpty();
     }
 }

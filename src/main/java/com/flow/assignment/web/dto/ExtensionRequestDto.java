@@ -28,7 +28,7 @@ public class ExtensionRequestDto {
     public Extension toExtension() {
         return Extension.builder()
                 .name(name)
-                .type(type)
+                .type(ExtensionType.CUSTOM)
                 .build();
     }
 

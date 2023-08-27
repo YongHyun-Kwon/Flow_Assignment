@@ -47,9 +47,10 @@
     <div class="chips" id="chipsContainer">
         <div class="chip" th:each="extension : ${extensions}" th:if="${#strings.equals(extension.type, 'CUSTOM')}">
             <span th:text="${extension.name}"></span>
-            <i class="close material-icons" th:attr="data-extension-id=${extension.id}">close</i>
+            <i class="close material-icons" th:attr="data-extension-id=${extension.id}" onclick="onClickDelete(event)">close</i>
         </div>
     </div>
+
     <h5>Upload File</h5>
     <div class="row">
         <div class="file-field input-field col s6">
