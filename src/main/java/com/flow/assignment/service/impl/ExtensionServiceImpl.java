@@ -1,17 +1,17 @@
 package com.flow.assignment.service.impl;
 
-import com.flow.assignment.domain.extension.*;
+import com.flow.assignment.domain.extension.Extension;
+import com.flow.assignment.domain.extension.ExtensionRepository;
 import com.flow.assignment.service.ExtensionService;
-import com.flow.assignment.web.IndexController;
 import com.flow.assignment.web.dto.ExtensionRequestDto;
 import com.flow.assignment.web.dto.ExtensionResponseDto;
+import com.flow.assignment.web.dto.ResponseDto;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.persistence.EntityNotFoundException;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -21,45 +21,60 @@ import java.util.stream.Collectors;
 public class ExtensionServiceImpl implements ExtensionService {
 
     private final ExtensionRepository extensionRepository;
+
     @Override
     @Transactional(readOnly = true)
-    public List<ExtensionResponseDto> getExtensionsList() {
-        return extensionRepository.findAll().stream().
-                map(ExtensionResponseDto::new).collect(Collectors.toList());
-    }
-
-    @Override
-    public void deleteExtension(Long id) {
-        Extension extension = extensionRepository.findById(id).orElseThrow(EntityNotFoundException::new);
-        extensionRepository.delete(extension);
-    }
-
-    @Override
-    public Long checkedExtension(Long id, Boolean isChecked) {
-        Extension extension = extensionRepository.findById(id).orElseThrow(EntityNotFoundException::new);
-        extension.checkedExtension(isChecked);
-        return extension.getId();
-    }
-
-    @Override
-    public Long saveExtension(ExtensionRequestDto requestDto) {
-        return validateAndSaveExtension(requestDto);
-    }
-
-    private Long validateAndSaveExtension(ExtensionRequestDto requestDto) {
-        int MAX_SIZE = 200;
-        if (extensionRepository.countAllExtensions() > MAX_SIZE) {
-            throw new IllegalStateException("추가 확장자는 200개 까지 저장 가능합니다.");
-        }
-        existsExtension(requestDto);
-        Extension extension = Extension.createExtension(requestDto);
-        return extensionRepository.save(extension).getId();
-    }
-
-    private void existsExtension(ExtensionRequestDto extensionRequestDto) {
-        boolean exists =  extensionRepository.existsByName(extensionRequestDto.getName());
-        if (exists) {
-            throw new IllegalStateException("이미 존재하는 확장자입니다.");
+    public ResponseDto<List<ExtensionResponseDto>> getExtensionsList() {
+        try{
+            List<ExtensionResponseDto> responseDto = extensionRepository.findAll().stream().
+                    map(ExtensionResponseDto::new).collect(Collectors.toList());
+            return ResponseDto.setSuccess("Success getList", responseDto);
+        } catch (Exception error) {
+            return ResponseDto.setFailed(error.getMessage());
         }
     }
+
+
+    @Override
+    public ResponseDto<String> deleteExtension(Long id) {
+        try {
+            Extension extension = extensionRepository.findById(id).orElseThrow(EntityNotFoundException::new);
+            extensionRepository.delete(extension);
+            return ResponseDto.setSuccess("Success Delete", String.valueOf(id));
+        } catch (Exception e) {
+            return ResponseDto.setFailed("삭제에 실패하였습니다. 관리자에게 문의 해주세요.");
+        }
+
+    }
+
+    @Override
+    public ResponseDto<String> checkedExtension(Long id, Boolean isChecked) {
+        try {
+            Extension extension = extensionRepository.findById(id).orElseThrow(EntityNotFoundException::new);
+            extension.checkedExtension(isChecked);
+            return ResponseDto.setSuccess("Success Checked", String.valueOf(id));
+        } catch (Exception e) {
+            return ResponseDto.setFailed("실패하였습니다. 관리자에게 문의 해주세요.");
+        }
+    }
+    @Override
+    public ResponseDto<String> saveExtension(ExtensionRequestDto requestDto) {
+        try {
+            int MAX_SIZE = 200;
+            if (extensionRepository.countAllExtensions() > MAX_SIZE) {
+                return ResponseDto.setFailed("추가 확장자는 200개 까지 저장 가능합니다.");
+            }
+            System.out.println("뭐지????1");
+            System.out.println(extensionRepository.existsByName(requestDto.getName()));
+            if (extensionRepository.existsByName(requestDto.getName())) {
+                System.out.println("??????????");
+                return ResponseDto.setFailed("이미 존재하는 확장자입니다.");
+            }
+            return ResponseDto.setSuccess("Success",
+                    String.valueOf(extensionRepository.save(requestDto.toExtension()).getId()));
+        } catch (Exception e) {
+            return ResponseDto.setFailed("실패하였습니다. 관리자에게 문의 해주세요.");
+        }
+    }
+
 }

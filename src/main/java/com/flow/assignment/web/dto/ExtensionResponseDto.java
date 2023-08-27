@@ -13,7 +13,6 @@ public class ExtensionResponseDto {
     private String name;
     private ExtensionType type;
     private Boolean isChecked;
-
     public ExtensionResponseDto(Extension extension) {
         this.id = extension.getId();
         this.name = extension.getName();

@@ -128,14 +128,19 @@
             body: JSON.stringify(isChecked)
         });
 
-        if (response.ok) {
+        const responseData = await response.json(); // Parse JSON response
+
+        if (responseData.result) {
             console.log('Extension status updated successfully.');
         } else {
-            console.error('Failed to update extension status.');
+            Swal.fire({
+                icon: 'error',
+                title: 'Failed to save',
+                text: responseData.message // Use parsed error message
+            });
+            return;
         }
     }
-
-
     // 저장 / 삭제
 
     const addExtensionButton = document.getElementById('addExtensionButton');
@@ -179,23 +184,23 @@
                         name: extensionName
                     })
                 });
-                if (response.ok) {
-                    const savedExtension = await response.json();
-                    return savedExtension;
+
+                const responseData = await response.json(); // Parse JSON response
+                if (responseData.result) {
+                    return extensionName;
                 } else {
-                    console.log(response)
                     Swal.fire({
                         icon: 'error',
                         title: 'Failed to save',
-                        text: 'Failed to save',
+                        text: responseData.message // Use parsed error message
                     });
-                    return null;
+                    return;
                 }
             } else {
                 Swal.fire({
                     icon: 'error',
                     title: 'Failed to save',
-                    text: '특수문자는 저장 불가능합니다.',
+                    text: '특수문자 및 한글은 저장 불가능합니다.',
                 });
                 return;
             }
@@ -203,7 +208,7 @@
             Swal.fire({
                 icon: 'error',
                 title: 'Failed to save',
-                text: '확장자는 20자 이내만 저장 가능합니다.',
+                text: '확장자는 20자 이하만 저장 가능합니다..',
             });
             return;
         }
