@@ -25,7 +25,6 @@ public class ExtensionApiController {
     public ResponseDto<String> deleteExtension(@PathVariable Long id) {
         return extensionService.deleteExtension(id);
     }
-
     @PutMapping("/check/{id}")
     public ResponseDto<String> checkExtension(@PathVariable Long id, @RequestBody Boolean isChecked) {
         return extensionService.checkedExtension(id, isChecked);
