@@ -5,8 +5,8 @@ import com.flow.assignment.web.dto.ExtensionRequestDto;
 import com.flow.assignment.web.dto.ExtensionResponseDto;
 import com.flow.assignment.web.dto.ResponseDto;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -19,7 +19,7 @@ public class ExtensionApiController {
 
     @GetMapping
     public ResponseDto<List<ExtensionResponseDto>> getExtensions() {
-            return extensionService.getExtensionsList();
+        return extensionService.getExtensionsList();
     }
     @DeleteMapping("{id}")
     public ResponseDto<String> deleteExtension(@PathVariable Long id) {
@@ -28,14 +28,17 @@ public class ExtensionApiController {
 
     @PutMapping("/check/{id}")
     public ResponseDto<String> checkExtension(@PathVariable Long id, @RequestBody Boolean isChecked) {
-
         return extensionService.checkedExtension(id, isChecked);
     }
 
     @PostMapping()
     public ResponseDto<String> saveExtension(@RequestBody ExtensionRequestDto extensionRequestDto) {
-            return extensionService.saveExtension(extensionRequestDto);
+        return extensionService.saveExtension(extensionRequestDto);
     }
 
+    @PostMapping("upload")
+    public ResponseDto<String> uploadFile(@RequestParam("file") MultipartFile file) {
+        return extensionService.uploadFile(file);
+    }
 
 }

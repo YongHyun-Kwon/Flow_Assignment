@@ -3,13 +3,14 @@ package com.flow.assignment.service.impl;
 import com.flow.assignment.domain.extension.Extension;
 import com.flow.assignment.domain.extension.ExtensionRepository;
 import com.flow.assignment.service.ExtensionService;
+import com.flow.assignment.utils.ResponseMessage;
 import com.flow.assignment.web.dto.ExtensionRequestDto;
 import com.flow.assignment.web.dto.ExtensionResponseDto;
 import com.flow.assignment.web.dto.ResponseDto;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import javax.persistence.EntityNotFoundException;
 import java.util.List;
@@ -25,12 +26,12 @@ public class ExtensionServiceImpl implements ExtensionService {
     @Override
     @Transactional(readOnly = true)
     public ResponseDto<List<ExtensionResponseDto>> getExtensionsList() {
-        try{
+        try {
             List<ExtensionResponseDto> responseDto = extensionRepository.findAll().stream().
                     map(ExtensionResponseDto::new).collect(Collectors.toList());
-            return ResponseDto.setSuccess("Success getList", responseDto);
+            return ResponseDto.setSuccess(ResponseMessage.SUCCESS_EXTENSION_LIST_MESSAGE, responseDto);
         } catch (Exception error) {
-            return ResponseDto.setFailed(error.getMessage());
+            return ResponseDto.setFailed(ResponseMessage.SERVER_ERROR_MESSAGE);
         }
     }
 
@@ -40,9 +41,9 @@ public class ExtensionServiceImpl implements ExtensionService {
         try {
             Extension extension = extensionRepository.findById(id).orElseThrow(EntityNotFoundException::new);
             extensionRepository.delete(extension);
-            return ResponseDto.setSuccess("Success Delete", String.valueOf(id));
-        } catch (Exception e) {
-            return ResponseDto.setFailed("삭제에 실패하였습니다. 관리자에게 문의 해주세요.");
+            return ResponseDto.setSuccess(ResponseMessage.SUCCESS_DELETED_MESSAGE, String.valueOf(id));
+        } catch (Exception error) {
+            return ResponseDto.setFailed(ResponseMessage.SERVER_ERROR_MESSAGE);
         }
 
     }
@@ -52,11 +53,12 @@ public class ExtensionServiceImpl implements ExtensionService {
         try {
             Extension extension = extensionRepository.findById(id).orElseThrow(EntityNotFoundException::new);
             extension.checkedExtension(isChecked);
-            return ResponseDto.setSuccess("Success Checked", String.valueOf(id));
-        } catch (Exception e) {
-            return ResponseDto.setFailed("실패하였습니다. 관리자에게 문의 해주세요.");
+            return ResponseDto.setSuccess(ResponseMessage.SUCCESS_CHECKED_MESSAGE, String.valueOf(id));
+        } catch (Exception error) {
+            return ResponseDto.setFailed(ResponseMessage.SERVER_ERROR_MESSAGE);
         }
     }
+
     @Override
     public ResponseDto<String> saveExtension(ExtensionRequestDto requestDto) {
         try {
@@ -64,17 +66,32 @@ public class ExtensionServiceImpl implements ExtensionService {
             if (extensionRepository.countAllExtensions() > MAX_SIZE) {
                 return ResponseDto.setFailed("추가 확장자는 200개 까지 저장 가능합니다.");
             }
-            System.out.println("뭐지????1");
-            System.out.println(extensionRepository.existsByName(requestDto.getName()));
             if (extensionRepository.existsByName(requestDto.getName())) {
-                System.out.println("??????????");
                 return ResponseDto.setFailed("이미 존재하는 확장자입니다.");
             }
-            return ResponseDto.setSuccess("Success",
+            return ResponseDto.setSuccess(ResponseMessage.SUCCESS_SAVE_MESSAGE,
                     String.valueOf(extensionRepository.save(requestDto.toExtension()).getId()));
-        } catch (Exception e) {
-            return ResponseDto.setFailed("실패하였습니다. 관리자에게 문의 해주세요.");
+        } catch (Exception error) {
+            return ResponseDto.setFailed(ResponseMessage.SERVER_ERROR_MESSAGE);
         }
+    }
+
+    @Override
+    public ResponseDto<String> uploadFile(MultipartFile file) {
+        String originalFilename = file.getOriginalFilename();
+        assert originalFilename != null;
+        String fileExtension = getFileExtension(originalFilename);
+        try {
+            if (extensionRepository.existsByName(fileExtension)) return ResponseDto.setFailed("Blocked file extension: " + fileExtension);
+            return ResponseDto.setSuccess("File uploaded successfully", originalFilename);
+        } catch (Exception e) {
+            return ResponseDto.setFailed(ResponseMessage.SERVER_ERROR_MESSAGE);
+        }
+    }
+
+    private String getFileExtension(String fileName) {
+        int dotIndex = fileName.lastIndexOf('.');
+        return (dotIndex == -1) ? "" : fileName.substring(dotIndex + 1).toLowerCase();
     }
 
 }
