@@ -4,8 +4,10 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.flow.assignment.domain.extension.Extension;
 import com.flow.assignment.domain.extension.ExtensionRepository;
+import com.flow.assignment.domain.extension.ExtensionType;
 import com.flow.assignment.utils.ResponseMessage;
 import com.flow.assignment.web.dto.ExtensionRequestDto;
+import com.flow.assignment.web.dto.ExtensionResponseDto;
 import org.junit.After;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -18,6 +20,9 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.junit4.SpringRunner;
+
+import java.util.ArrayList;
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -130,5 +135,34 @@ public class ExtensionApiControllerTest {
 
         assertThat(responseJson.get("result").asBoolean()).isTrue();
         assertThat(responseJson.get("message").asText()).isEqualTo(ResponseMessage.SUCCESS_EXTENSION_LIST_MESSAGE);
+    }
+
+    @Test
+    public void maximumSaveTest() throws Exception {
+        String name = "testExtension";
+        List<Extension> extensions = new ArrayList<>();
+        for (int i = 0; i < 200; i++) {
+            ExtensionRequestDto extensionRequestDto = ExtensionRequestDto.builder().name(name + i).type(ExtensionType.CUSTOM).build();
+            extensions.add(Extension.createExtension(extensionRequestDto));
+        }
+
+        extensionRepository.saveAll(extensions);
+
+        ExtensionRequestDto testExtension = ExtensionRequestDto.builder().name("saveTest").build();
+
+        String url = "http://localhost:" + port + "/extension/v1/extensions";
+
+        ResponseEntity<String> responseEntity = restTemplate.postForEntity(url, testExtension, String.class);
+
+        assertThat(responseEntity.getStatusCode()).isEqualTo(HttpStatus.OK);
+
+        ObjectMapper objectMapper = new ObjectMapper();
+        JsonNode responseJson = objectMapper.readTree(responseEntity.getBody());
+
+        System.out.println(responseJson);
+
+        assertThat(responseJson.get("result").asBoolean()).isFalse();
+        assertThat(responseJson.get("message").asText()).isEqualTo("추가 확장자는 200개 까지 저장 가능합니다.");
+
     }
 }

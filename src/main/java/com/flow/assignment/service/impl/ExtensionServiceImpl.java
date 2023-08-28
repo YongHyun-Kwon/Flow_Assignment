@@ -63,7 +63,7 @@ public class ExtensionServiceImpl implements ExtensionService {
     public ResponseDto<String> saveExtension(ExtensionRequestDto requestDto) {
         try {
             int MAX_SIZE = 200;
-            if (extensionRepository.countAllExtensions() > MAX_SIZE) {
+            if (extensionRepository.countAllExtensions() >= MAX_SIZE) {
                 return ResponseDto.setFailed("추가 확장자는 200개 까지 저장 가능합니다.");
             }
             if (extensionRepository.existsByName(requestDto.getName())) {
